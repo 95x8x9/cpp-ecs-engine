@@ -2,6 +2,7 @@
 /out/
 /.vs/
 /.vscode/
+/.codex/
 /CMakeUserPresets.json
 /vcpkg_installed/
 *.user
