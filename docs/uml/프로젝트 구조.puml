@@ -1,4 +1,4 @@
-@startuml
+@startuml project-structure
 title SafeCrowd Simple 3-Layer Architecture
 
 skinparam componentStyle rectangle

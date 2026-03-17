@@ -1,4 +1,4 @@
-@startuml
+@startuml engine-core
 title SafeCrowd Engine Core Design
 
 skinparam classAttributeIconSize 0
