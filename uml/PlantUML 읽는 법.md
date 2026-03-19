@@ -136,7 +136,7 @@ PlantUML에서 선은 크게 두 가지를 같이 본다.
 - 의미: public 멤버를 뜻한다.
 - 예시: `+initialize()`, `+query()`
 
-### 박스 안의 여러 줄 텍스트
+### 회색 박스 안의 여러 줄 텍스트
 - 의미: 핵심 책임이나 대표 구성 요소를 요약한 것이다.
 - 예시:
   - `Runtime Core (FrameClock / SystemScheduler / CommandBuffer / ResourceStore / DeterministicRng)`
