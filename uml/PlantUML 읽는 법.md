@@ -11,12 +11,12 @@
 
 ## 1. 박스와 요소 읽는 법
 
-### `package`
+### `package` - 구역을 나누는 선
 - 의미: 관련 요소를 묶는 논리적 영역이다.
 - 이 프로젝트 예시: `application`, `domain`, `engine`, `engine::api`, `engine::runtime`, `engine::ecs`
 - 읽는 법: "이 박스 안의 요소들은 같은 계층 또는 같은 모듈에 속한다"로 보면 된다.
 
-### 사각형 컴포넌트 박스
+### 회색 사각형 컴포넌트 박스
 - 의미: 상위 수준에서 책임 단위를 표현한다.
 - 이 프로젝트 예시: `Runtime Core`, `ECS Core`, `safecrowd_app`, `ResultAggregator`
 - 읽는 법: 구현 클래스 하나라기보다 "역할 묶음"일 수도 있다.
