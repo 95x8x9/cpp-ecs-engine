@@ -49,6 +49,7 @@ add_library(ecs_engine STATIC
     src/engine/EngineStepContext.h
     src/engine/EngineSystem.h
     src/engine/FrameClock.h
+    src/engine/WorldQuery.h
     src/engine/EntityRegistry.cpp
     src/engine/EngineRuntime.cpp
     src/engine/FrameClock.cpp
@@ -103,6 +104,7 @@ if (BUILD_TESTING)
         tests/EcsCoreTests.cpp
         tests/ImportContractsTests.cpp
         tests/DxfImportServiceTests.cpp
+        tests/WorldQueryTests.cpp
     )
 
     target_include_directories(safecrowd_tests
