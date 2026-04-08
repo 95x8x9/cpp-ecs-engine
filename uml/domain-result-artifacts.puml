@@ -1,0 +1,114 @@
+@startuml domain-result-artifacts
+title SafeCrowd Domain Result Artifacts
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "domain" {
+  class RunResult {
+    runId
+    status
+    seed
+    variation key
+  }
+
+  class RunMetadata {
+    scenario id
+    execution config
+    started / finished at
+  }
+
+  class MetricSummary {
+    total evac time
+    percentile evac time
+    max density
+    hotspot counts
+  }
+
+  class DoorHistory {
+    time series
+    throughput
+    queue
+  }
+
+  class RoomHistory {
+    time series
+    density
+    congestion
+  }
+
+  class MeasurementRegionSeries {
+    region id
+    sampled metrics
+  }
+
+  class OccupantHistory {
+    occupant trace
+    optional detail
+  }
+
+  class ArtifactIndex {
+    storage keys
+    export manifest
+  }
+
+  class VariationSummary {
+    variation key
+    aggregate metrics
+  }
+
+  class ScenarioComparison {
+    baseline vs alternatives
+    delta metrics
+  }
+
+  class CumulativeArtifact {
+    canonical summary
+    export-ready bundle
+  }
+}
+
+RunResult *-- RunMetadata
+RunResult *-- MetricSummary
+RunResult o-- DoorHistory
+RunResult o-- RoomHistory
+RunResult o-- MeasurementRegionSeries
+RunResult o-- OccupantHistory : optional
+RunResult --> ArtifactIndex
+
+VariationSummary *-- RunResult
+VariationSummary *-- MetricSummary : aggregate
+ScenarioComparison *-- VariationSummary : baseline + alternatives
+CumulativeArtifact --> VariationSummary : built from aggregated runs
+CumulativeArtifact --> ScenarioComparison : comparison payload
+CumulativeArtifact --> ArtifactIndex : canonical export references
+
+note bottom of RunResult
+  Run result is the smallest persisted execution unit.
+  It may exist even when a higher-level variation or
+  comparison summary has not been computed yet.
+end note
+
+note bottom of VariationSummary
+  Variation summary aggregates repeated runs
+  and keeps Monte Carlo style statistics separate
+  from a single deterministic run output.
+end note
+
+note bottom of OccupantHistory
+  Occupant history is optional by design.
+  The core result pipeline should remain valid
+  even when detailed per-occupant traces are disabled.
+end note
+
+note bottom of CumulativeArtifact
+  Cumulative artifact is the canonical bundle
+  used by export, comparison, and recommendation input.
+  It should reference detailed histories
+  rather than duplicating every raw sample.
+end note
+
+@enduml
