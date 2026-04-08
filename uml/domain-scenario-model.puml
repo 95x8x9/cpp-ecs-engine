@@ -1,0 +1,172 @@
+@startuml domain-scenario-model
+title SafeCrowd Domain Scenario Model
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "domain" {
+  package "layout contract" {
+    class FacilityLayout {
+      layoutId
+      floors
+      rooms
+      doors
+      connectors
+      measurement regions
+    }
+
+    class Floor {
+      levelIndex
+      elevation
+    }
+
+    class Room {
+      roomId
+      category
+      occupancy anchor
+    }
+
+    class Door {
+      doorId
+      width
+      direction mode
+    }
+
+    class Connector {
+      connectorId
+      kind
+      endpoints
+    }
+
+    class ConnectorModifier {
+      speed factor
+      queue bias
+      accessibility gate
+    }
+
+    class StaticObstruction {
+      geometry
+      clearance impact
+    }
+
+    class DynamicObstacleRule {
+      activation window
+      affected area
+    }
+
+    class MeasurementRegionSpec {
+      regionId
+      tracked metrics
+    }
+  }
+
+  package "scenario contract" {
+    class ScenarioDefinition {
+      scenarioId
+      name
+      baseline flag
+    }
+
+    class ScenarioVariation {
+      variationId
+      name
+      override summary
+    }
+
+    class PopulationSpec {
+      initial placements
+      dynamic sources
+    }
+
+    class PopulationProfile {
+      desired speed distribution
+      acceleration distribution
+      spacing distribution
+      connector permissions
+    }
+
+    class InitialPlacement {
+      room or area
+      count
+    }
+
+    class DynamicSource {
+      sourceId
+      schedule
+      ingress rate
+    }
+
+    class EnvironmentState {
+      visibility
+      familiarity
+      guidance signal
+    }
+
+    class ControlPlan {
+      events
+      behavior bindings
+      route choice bindings
+    }
+
+    class ExecutionConfig {
+      time limit
+      sample interval
+      base seed
+      repeat count
+    }
+  }
+}
+
+FacilityLayout *-- Floor
+Floor *-- Room
+FacilityLayout *-- Door
+FacilityLayout *-- Connector
+Connector *-- ConnectorModifier
+FacilityLayout *-- StaticObstruction
+FacilityLayout *-- DynamicObstacleRule
+FacilityLayout *-- MeasurementRegionSpec
+
+ScenarioDefinition --> FacilityLayout : uses validated layout
+ScenarioDefinition --> PopulationSpec
+ScenarioDefinition --> EnvironmentState
+ScenarioDefinition --> ControlPlan
+ScenarioDefinition --> ExecutionConfig : default run contract
+
+ScenarioVariation --> ScenarioDefinition : derives from baseline
+ScenarioVariation ..> PopulationSpec : placement/source overrides
+ScenarioVariation ..> EnvironmentState : scenario delta
+ScenarioVariation ..> ControlPlan : operational delta
+ScenarioVariation ..> ExecutionConfig : repeat or seed override
+
+PopulationSpec *-- PopulationProfile
+PopulationSpec *-- InitialPlacement
+PopulationSpec *-- DynamicSource
+InitialPlacement --> Room : anchor
+DynamicSource --> Room : source anchor
+PopulationProfile ..> Connector : usable restriction
+
+note bottom of ScenarioDefinition
+  Existing `ScenarioDefinition` aggregate is kept
+  as the authoring boundary.
+  It decomposes into the five input contracts:
+  FacilityLayout / PopulationSpec / EnvironmentState
+  / ControlPlan / ExecutionConfig.
+end note
+
+note bottom of ScenarioVariation
+  Variation is not a full copy of the baseline.
+  It stores only the delta that matters for
+  comparison and repeated execution.
+end note
+
+note bottom of DynamicSource
+  Initial placement and source-based inflow
+  are modeled separately so Sprint 1 execution
+  can start simple and later add ingress logic
+  without reshaping the whole scenario contract.
+end note
+
+@enduml

@@ -1,0 +1,146 @@
+@startuml engine-routing-and-connectors
+title SafeCrowd Engine Routing and Connectors Boundary
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "domain" {
+  class FacilityLayout {
+    rooms
+    doors
+    connectors
+  }
+
+  class ConnectorSpec {
+    kind
+    endpoints
+    base traversal rule계단, 램프, 에스컬레이터, 보행로처럼 층간 또는 구간 연결이 필요한 경우 connector와 modifier를 함께 확정할 수 있다. 
+  }
+
+  class ConnectorModifier {
+    speed factor
+    queue bias
+    access rule
+  }
+
+  class StaticObstruction {
+    geometry
+    clearance effect
+  }
+
+  class DynamicObstacleRule {
+    trigger window
+    blocked area
+  }
+
+  class MeasurementRegionSpec {
+    region geometry
+    metric set
+  }
+
+  class RouteChoicePolicy {
+    policy id
+  }
+
+  class PathCostModel {
+    travel / queue / remaining cost
+  }
+
+  class RoutingTopologySnapshot {
+    room graph
+    door graph
+    connector edges
+  }
+}
+
+package "engine" {
+  class EngineWorld {
+    resources
+    commands
+  }
+
+  class NavigationGraph {
+    nodes
+    edges
+  }
+
+  class TravelCostEvaluator {
+    dynamic weights
+  }
+
+  class DynamicObstacleField {
+    blocked segments
+    active penalties
+  }
+
+  class ConnectorTraversalState {
+    queue state
+    throughput state
+  }
+
+  class PathPlannerSystem {
+    path query
+    reroute update
+  }
+
+  class FlowMeasurementService {
+    region samplers
+    door counters
+    room counters
+  }
+
+  class MeasurementSample {
+    time stamp
+    metric values
+  }
+}
+
+FacilityLayout --> RoutingTopologySnapshot : compile validated topology
+ConnectorSpec *-- ConnectorModifier
+FacilityLayout *-- ConnectorSpec
+FacilityLayout *-- StaticObstruction
+FacilityLayout *-- DynamicObstacleRule
+FacilityLayout *-- MeasurementRegionSpec
+RouteChoicePolicy --> PathCostModel
+
+RoutingTopologySnapshot --> NavigationGraph : load as resource
+RoutingTopologySnapshot --> ConnectorTraversalState : seed connector rules
+DynamicObstacleRule --> DynamicObstacleField : runtime activation
+PathCostModel --> TravelCostEvaluator : configure weights
+DynamicObstacleField --> TravelCostEvaluator : penalty source
+NavigationGraph --> TravelCostEvaluator
+
+PathPlannerSystem --> NavigationGraph
+PathPlannerSystem --> TravelCostEvaluator
+PathPlannerSystem --> ConnectorTraversalState
+FlowMeasurementService --> MeasurementSample
+MeasurementRegionSpec --> FlowMeasurementService : register measurement regions
+ConnectorTraversalState --> FlowMeasurementService : door / connector throughput
+EngineWorld --> NavigationGraph
+EngineWorld --> DynamicObstacleField
+EngineWorld --> ConnectorTraversalState
+EngineWorld --> FlowMeasurementService
+
+note bottom of RoutingTopologySnapshot
+  The engine should not depend on rich domain objects directly.
+  Domain compiles a stable routing snapshot and
+  registers that snapshot as engine resources.
+end note
+
+note bottom of DynamicObstacleField
+  Static obstruction is baked into the topology first.
+  Dynamic obstacle rules update a separate runtime field
+  so path cost and access control can change over time
+  without rebuilding the whole graph every frame.
+end note
+
+note bottom of FlowMeasurementService
+  Measurement is treated as a boundary service.
+  It emits domain-neutral samples that later become
+  DoorHistory / RoomHistory / MeasurementRegionSeries.
+end note
+
+@enduml

@@ -1,0 +1,76 @@
+@startuml application-run-results-workflow
+title SafeCrowd Application Run and Results Workflow
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "application" {
+  [Project Workspace\n(project open / save)] as Workspace
+  [Scenario Editor\n(layout / population / control)] as ScenarioEditor
+  [Run Control Panel\n(run / pause / stop / repeat)] as RunControl
+  [Live Viewport\n(runtime playback)] as LiveViewport
+  [Run Results Panel\n(run / variation summary)] as RunResultsPanel
+  [Comparison View\n(baseline vs alternatives)] as ComparisonView
+  [Export Dialog\n(report / artifact bundle)] as ExportDialog
+  [Recommendation Panel\n(evidence / scenarioize)] as RecommendationPanel
+}
+
+package "domain" {
+  [ScenarioBatchRunner\n(spawn baseline / variations)] as BatchRunner
+  [SimulationSession\n(single run lifecycle)] as SimulationSession
+  [ResultRepository\n(load / persist artifacts)] as ResultRepository
+  [ResultAggregator\n(summary / compare)] as ResultAggregator
+  [AlternativeRecommendationService\n(candidate generation)] as RecommendationService
+}
+
+package "engine" {
+  [EngineRuntime\n(playback control)] as EngineRuntime
+  [IRenderBridge\nframe sync] as RenderBridge
+}
+
+Workspace --> ScenarioEditor : author scenario family
+ScenarioEditor --> RunControl : submit baseline / variation set
+RunControl --> BatchRunner : execute batch
+BatchRunner --> SimulationSession : spawn run
+SimulationSession --> EngineRuntime : initialize / play / stop
+EngineRuntime --> RenderBridge : live frame snapshots
+RenderBridge --> LiveViewport : present runtime state
+
+BatchRunner --> ResultRepository : persist run artifacts
+ResultRepository --> RunResultsPanel : load run / variation summaries
+RunResultsPanel --> ComparisonView : open baseline comparison
+ComparisonView --> ResultAggregator : refresh deltas
+ResultAggregator --> ResultRepository : read cumulative artifacts
+
+ComparisonView --> ExportDialog : export selected artifact bundle
+ExportDialog --> ResultRepository : resolve files
+
+ComparisonView --> RecommendationPanel : inspect recommendation evidence
+RecommendationPanel --> RecommendationService : generate candidates
+RecommendationService --> ResultRepository : read cumulative artifact
+RecommendationService --> ScenarioEditor : create recommended variation
+Workspace --> ResultRepository : reopen saved project
+
+note bottom of Workspace
+  Authoring and analysis live in one project workspace,
+  but the workflow still separates scenario editing
+  from results browsing and export.
+end note
+
+note bottom of RunResultsPanel
+  Application first lands on run / variation summaries.
+  Comparison, export, and recommendation are downstream
+  consumers of persisted result artifacts,
+  not direct engine state readers.
+end note
+
+note bottom of RecommendationPanel
+  Recommendation stays after the result pipeline.
+  It should consume stable cumulative artifacts and
+  comparison deltas rather than ad hoc live metrics.
+end note
+
+@enduml

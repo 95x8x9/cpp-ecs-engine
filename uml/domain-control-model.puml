@@ -1,0 +1,132 @@
+@startuml domain-control-model
+title SafeCrowd Domain Control Model
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "domain" {
+  class ControlPlan {
+    planId
+    event sequence
+    binding catalog
+  }
+
+  class OperationalEvent {
+    eventId
+    name
+    priority
+    enabled
+  }
+
+  class Trigger {
+    triggerId
+    evaluation mode
+  }
+
+  abstract class TriggerCondition
+  class TimeTriggerCondition {
+    simulation time
+  }
+  class StateTriggerCondition {
+    metric threshold
+    target region
+  }
+
+  class OccupantTag {
+    tagId
+    selection rule
+  }
+
+  class Behavior {
+    behaviorId
+    name
+  }
+
+  class BehaviorStep {
+    action type
+    target selector
+    completion rule
+  }
+
+  class BehaviorBinding {
+    bindingId
+    target tag
+  }
+
+  class RouteChoiceBinding {
+    bindingId
+    target tag
+  }
+
+  class RouteChoicePolicy {
+    policyId
+    reroute mode
+  }
+
+  class PathCostModel {
+    cost weights
+  }
+
+  class CostComponent {
+    component kind
+    weight
+  }
+
+  class AccessRuleChange {
+    door or connector target
+    access mode
+  }
+
+  class SourceRateChange {
+    source target
+    ingress delta
+  }
+}
+
+ControlPlan *-- OperationalEvent
+ControlPlan *-- OccupantTag
+ControlPlan *-- Behavior
+ControlPlan *-- BehaviorBinding
+ControlPlan *-- RouteChoiceBinding
+
+OperationalEvent --> Trigger
+Trigger *-- TriggerCondition
+TriggerCondition <|-- TimeTriggerCondition
+TriggerCondition <|-- StateTriggerCondition
+
+Behavior *-- BehaviorStep
+BehaviorBinding --> OccupantTag
+BehaviorBinding --> Behavior
+
+RouteChoiceBinding --> OccupantTag
+RouteChoiceBinding --> RouteChoicePolicy
+RouteChoicePolicy --> PathCostModel
+PathCostModel *-- CostComponent
+
+OperationalEvent o-- BehaviorBinding : activate / replace
+OperationalEvent o-- AccessRuleChange
+OperationalEvent o-- SourceRateChange
+
+note bottom of ControlPlan
+  Control is not modeled as raw on/off flags only.
+  A plan owns tag bindings, behavior choices,
+  route choice bindings, and event sequencing.
+end note
+
+note bottom of Trigger
+  Initial scope supports time-based and
+  state-based trigger conditions.
+  More advanced perception or response stages
+  can be layered later without renaming events.
+end note
+
+note bottom of PathCostModel
+  Door choice is expressed as a weighted cost model.
+  Typical components are current room travel time,
+  queue time, and remaining route cost.
+end note
+
+@enduml
