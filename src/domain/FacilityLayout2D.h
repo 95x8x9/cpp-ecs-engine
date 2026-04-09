@@ -99,7 +99,7 @@ struct FacilityLayout2D {
     std::vector<Connection2D> connections{};
     std::vector<Barrier2D> barriers{};
     std::vector<ControlPoint2D> controls{};
-    std::vector<SpawnZone2D> spawnXones{};
+    std::vector<SpawnZone2D> spawnZones{};
 };
 
 }  // namespace safecrowd::domain
